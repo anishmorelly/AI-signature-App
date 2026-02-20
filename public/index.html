@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Universal Email Signature Builder (HTML Template + Placeholders)</title>
+  <style>
+    :root { --bd:#e6e6e6; --bg:#fafafa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; }
+    .wrap { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
+    .panel { padding: 16px; border-right: 1px solid var(--bd); background: #fff; overflow: auto; }
+    .preview { padding: 16px; background: var(--bg); overflow: auto; }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    h2 { font-size: 14px; margin: 18px 0 8px; }
+    .box { background: #fff; border: 1px solid var(--bd); border-radius: 12px; padding: 12px; }
+    label { display:block; font-size: 12px; color:#333; margin: 10px 0 6px; }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cfcfcf;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    button {
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .hint { font-size: 12px; color:#666; line-height: 1.4; margin-top: 10px; }
+    code { background: #f2f2f2; padding: 2px 6px; border-radius: 6px; }
+    .badge { display:inline-block; font-size: 12px; padding: 3px 8px; border:1px solid var(--bd); border-radius: 999px; background:#fff; }
+    .muted { color:#666; font-size: 12px; }
+    .divider { height: 1px; background: var(--bd); margin: 12px 0; }
+    .signature-frame {
+      background: #fff;
+      border: 1px solid var(--bd);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+    }
+    .danger { color: #b00020; font-size: 12px; }
+    .ok { color: #0b6b2f; font-size: 12px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Universal Signature Builder <span class="badge">single-file</span></h1>
+
+      <div class="box">
+        <label>1) Load your signature template (HTML file)</label>
+        <input id="templateFile" type="file" accept=".html,.htm,text/html" />
+
+        <div class="hint">
+          Your template should contain placeholders like:
+          <div class="divider"></div>
+          <div><code>{{{name}}}</code>, <code>{{{job_title}}}</code>, <code>{{{email}}}</code></div>
+          <div><code>{{{email_href}}}</code> (e.g. <code>mailto:someone@x.com</code>)</div>
+          <div><code>{{{phone_display}}}</code></div>
+          <div><code>{{{tel_href}}}</code> (e.g. <code>tel:+61400111222</code>)</div>
+          <div><code>{{{linkedin}}}</code></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <label>AI: Paste any text and extract details</label>
+        <textarea id="aiText" placeholder="Paste email / bio / signature text here..."></textarea>
+
+        <div class="row">
+          <button id="aiExtractBtn" type="button">Extract with AI</button>
+          <button id="aiClearBtn" type="button">Clear</button>
+        </div>
+
+        <div id="aiStatus" class="hint muted"></div>
+
+        <div class="divider"></div>
+
+        <label>2) Fill details</label>
+
+        <label for="name">Full name</label>
+        <input id="name" placeholder="e.g., Rachael Gordon" />
+
+        <label for="job_title">Job title</label>
+        <input id="job_title" placeholder="e.g., Executive Assistant to CEO" />
+
+        <label for="email">Email</label>
+        <input id="email" placeholder="e.g., rgordon@impactag.com.au" />
+
+        <div class="row">
+          <div>
+            <label for="phone_display">Phone (display)</label>
+            <input id="phone_display" placeholder="e.g., 0404 375 815" />
+          </div>
+          <div>
+            <label for="phone_e164">Phone (tel link)</label>
+            <input id="phone_e164" placeholder="e.g., +61404375815" />
+          </div>
+        </div>
+
+        <label for="linkedin">LinkedIn URL</label>
+        <input id="linkedin" placeholder="https://www.linkedin.com/in/..." />
+
+        <label for="website">Website URL (optional)</label>
+        <input id="website" placeholder="https://example.com" />
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <button id="downloadHtmlBtn" type="button">Download Filled HTML</button>
+          <button id="copyHtmlBtn" type="button">Copy Filled HTML</button>
+        </div>
+
+        <div class="hint muted">
+          Tip: Use triple braces <code>{{{...}}}</code> when you want raw HTML inserted (no escaping),
+          e.g. for a pre-built link tag. For plain text, it also works fine.
+        </div>
+
+        <div id="status" class="hint"></div>
+      </div>
+
+      <h2>Template placeholder guide</h2>
+      <div class="box">
+        <div class="muted">Use any placeholders you want. These are provided out-of-the-box:</div>
+        <ul style="margin:10px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6;">
+          <li><code>{{{name}}}</code></li>
+          <li><code>{{{job_title}}}</code></li>
+          <li><code>{{{email}}}</code></li>
+          <li><code>{{{email_href}}}</code> → <span class="muted">mailto link</span></li>
+          <li><code>{{{phone_display}}}</code></li>
+          <li><code>{{{tel_href}}}</code> → <span class="muted">tel link</span></li>
+          <li><code>{{{linkedin}}}</code></li>
+          <li><code>{{{website}}}</code></li>
+        </ul>
+
+        <div class="divider"></div>
+        <div class="muted">Example inside your signature template:</div>
+        <pre style="white-space: pre-wrap; background:#f7f7f7; padding:10px; border-radius:10px; border:1px solid var(--bd); font-size:12px; margin-top:10px;">
+&lt;span style="font-family:Arial;font-size:11pt;"&gt;{{{name}}}&lt;/span&gt;&lt;br&gt;
+&lt;span style="font-family:Arial;font-size:11pt;"&gt;{{{job_title}}}&lt;/span&gt;&lt;br&gt;
+
+&lt;a href="{{{email_href}}}" style="text-decoration:none;color:#091C26;"&gt;
+  {{{email}}}
+&lt;/a&gt;&lt;br&gt;
+
+&lt;a href="{{{tel_href}}}" style="text-decoration:none;color:#091C26;"&gt;
+  {{{phone_display}}}
+&lt;/a&gt;&lt;br&gt;
+
+&lt;a href="{{{linkedin}}}"&gt;LinkedIn&lt;/a&gt;
+        </pre>
+      </div>
+    </div>
+
+    <div class="preview">
+      <h2 style="margin:0 0 10px;">Live Preview</h2>
+      <div class="signature-frame" id="previewHost">
+        <div class="muted">Load a template file to preview here…</div>
+      </div>
+
+      <div class="hint muted" style="margin-top:10px;">
+        Preview is rendered as HTML. If your template includes <code>&lt;style&gt;</code> tags, they will apply here too.
+      </div>
+      <div id="warn" class="danger" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // ====== Simple placeholder engine ======
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderTemplate(template, data) {
+      let out = template.replace(/\{\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}\}/g, (_, key) => {
+        return String(data[key] ?? "");
+      });
+
+      out = out.replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_, key) => {
+        return escapeHtml(data[key] ?? "");
+      });
+
+      return out;
+    }
+
+    // ====== App ======
+    const els = {
+      templateFile: document.getElementById("templateFile"),
+      previewHost: document.getElementById("previewHost"),
+      status: document.getElementById("status"),
+      warn: document.getElementById("warn"),
+      downloadHtmlBtn: document.getElementById("downloadHtmlBtn"),
+      copyHtmlBtn: document.getElementById("copyHtmlBtn"),
+
+      aiText: document.getElementById("aiText"),
+      aiExtractBtn: document.getElementById("aiExtractBtn"),
+      aiClearBtn: document.getElementById("aiClearBtn"),
+      aiStatus: document.getElementById("aiStatus"),
+
+      inputs: {
+        name: document.getElementById("name"),
+        job_title: document.getElementById("job_title"),
+        email: document.getElementById("email"),
+        phone_display: document.getElementById("phone_display"),
+        phone_e164: document.getElementById("phone_e164"),
+        linkedin: document.getElementById("linkedin"),
+        website: document.getElementById("website"),
+      }
+    };
+
+    let templateText = "";
+    let templateFilename = "signature-template.html";
+
+    function buildData() {
+      const name = els.inputs.name.value.trim();
+      const job_title = els.inputs.job_title.value.trim();
+      const email = els.inputs.email.value.trim();
+      const phone_display = els.inputs.phone_display.value.trim();
+      const phone_e164 = els.inputs.phone_e164.value.trim();
+      const linkedin = els.inputs.linkedin.value.trim();
+      const website = els.inputs.website.value.trim();
+
+      return {
+        name,
+        job_title,
+        email,
+        phone_display,
+        linkedin,
+        website,
+        email_href: email ? `mailto:${email}` : "",
+        tel_href: phone_e164 ? `tel:${phone_e164}` : "",
+      };
+    }
+
+    function updatePreview() {
+      els.warn.textContent = "";
+      if (!templateText) {
+        els.previewHost.innerHTML = '<div class="muted">Load a template file to preview here…</div>';
+        return;
+      }
+
+      const data = buildData();
+      const filled = renderTemplate(templateText, data);
+      els.previewHost.innerHTML = filled;
+
+      if (/<script\b/i.test(templateText)) {
+        els.warn.textContent = "Warning: Your template contains <script>. Email signatures generally should not include scripts.";
+      }
+    }
+
+    function setStatus(msg, type = "") {
+      // type: "", "ok", "danger"
+      if (type === "ok") els.status.innerHTML = `<span class="ok">${msg}</span>`;
+      else if (type === "danger") els.status.innerHTML = `<span class="danger">${msg}</span>`;
+      else els.status.innerHTML = msg;
+    }
+
+    function setAiStatus(msg, type = "") {
+      if (type === "ok") els.aiStatus.innerHTML = `<span class="ok">${msg}</span>`;
+      else if (type === "danger") els.aiStatus.innerHTML = `<span class="danger">${msg}</span>`;
+      else els.aiStatus.textContent = msg;
+    }
+
+    function applyExtracted(data) {
+      // Only apply if present (don’t wipe fields)
+      if (data?.name) els.inputs.name.value = data.name;
+      if (data?.job_title) els.inputs.job_title.value = data.job_title;
+      if (data?.email) els.inputs.email.value = data.email;
+      if (data?.phone_display) els.inputs.phone_display.value = data.phone_display;
+      if (data?.phone_e164) els.inputs.phone_e164.value = data.phone_e164;
+      if (data?.linkedin) els.inputs.linkedin.value = data.linkedin;
+      if (data?.website) els.inputs.website.value = data.website;
+
+      updatePreview();
+    }
+
+    // Template load
+    els.templateFile.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      templateFilename = file.name || "signature-template.html";
+      try {
+        templateText = await file.text();
+        setStatus(`Loaded template: <code>${templateFilename}</code>`, "ok");
+        updatePreview();
+      } catch (err) {
+        templateText = "";
+        setStatus("Failed to read template file.", "danger");
+        els.previewHost.innerHTML = '<div class="muted">Load a template file to preview here…</div>';
+      }
+    });
+
+    // Update preview on input typing
+    Object.values(els.inputs).forEach(input => {
+      input.addEventListener("input", updatePreview);
+    });
+
+    // Download
+    els.downloadHtmlBtn.addEventListener("click", () => {
+      if (!templateText) {
+        setStatus("Please load a template HTML file first.", "danger");
+        return;
+      }
+      const filled = renderTemplate(templateText, buildData());
+
+      const blob = new Blob([filled], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = templateFilename.replace(/(\.html?)$/i, "") + "-FILLED.html";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus("Downloaded filled HTML.", "ok");
+    });
+
+    // Copy
+    els.copyHtmlBtn.addEventListener("click", async () => {
+      if (!templateText) {
+        setStatus("Please load a template HTML file first.", "danger");
+        return;
+      }
+      const filled = renderTemplate(templateText, buildData());
+      try {
+        await navigator.clipboard.writeText(filled);
+        setStatus("Copied filled HTML to clipboard.", "ok");
+      } catch (err) {
+        const ta = document.createElement("textarea");
+        ta.value = filled;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        setStatus("Copied filled HTML to clipboard (fallback).", "ok");
+      }
+    });
+
+    // AI buttons
+    els.aiClearBtn.addEventListener("click", () => {
+      els.aiText.value = "";
+      setAiStatus("");
+    });
+
+    // ---- IMPORTANT: This is the fixed AI fetch ----
+    els.aiExtractBtn.addEventListener("click", async () => {
+      const text = (els.aiText.value || "").trim();
+      if (!text) {
+        setAiStatus("Paste some text first.", "danger");
+        return;
+      }
+
+      setAiStatus("Extracting…");
+
+      try {
+        const res = await fetch("/api/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        // Read as text first, so HTML errors (404 pages) don't explode as JSON parse errors
+        const raw = await res.text();
+
+        let out;
+        try {
+          out = JSON.parse(raw);
+        } catch {
+          throw new Error(`API did not return JSON. HTTP ${res.status}. First 160 chars: ${raw.slice(0, 160)}`);
+        }
+
+        if (!res.ok) {
+          throw new Error(out?.error || `Request failed (HTTP ${res.status})`);
+        }
+
+        applyExtracted(out.data);
+        setAiStatus("Done — fields filled.", "ok");
+      } catch (err) {
+        setAiStatus("Failed: " + (err?.message || String(err)), "danger");
+      }
+    });
+
+    // Initial
+    updatePreview();
+  </script>
+</body>
+</html>
